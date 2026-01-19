@@ -1,38 +1,29 @@
-const CACHE_NAME = 'mrss-dd-coco-v1';
+const CACHE_NAME = 'mrss-dd-coco-v2';
 const urlsToCache = [
-  '/mrss-dd-coco/',
-  '/mrss-dd-coco/index.html',
-  '/mrss-dd-coco/manifest.json',
-  '/mrss-dd-coco/icon-192.png',
-  '/mrss-dd-coco/icon-512.png'
+  '/MRSS_DD_COCO/',
+  '/MRSS_DD_COCO/index.html',
+  '/MRSS_DD_COCO/manifest.json',
+  '/MRSS_DD_COCO/icon-192.png',
+  '/MRSS_DD_COCO/icon-512.png'
 ];
 
-// Install service worker and cache files
 self.addEventListener('install', event => {
+  self.skipWaiting();
   event.waitUntil(
     caches.open(CACHE_NAME)
       .then(cache => {
-        console.log('Opened cache');
         return cache.addAll(urlsToCache);
       })
   );
 });
 
-// Fetch from cache first, then network
 self.addEventListener('fetch', event => {
   event.respondWith(
-    caches.match(event.request)
-      .then(response => {
-        if (response) {
-          return response;
-        }
-        return fetch(event.request);
-      }
-    )
+    fetch(event.request)
+      .catch(() => caches.match(event.request))
   );
 });
 
-// Update cache when new version is available
 self.addEventListener('activate', event => {
   event.waitUntil(
     caches.keys().then(cacheNames => {
