@@ -159,10 +159,6 @@
             font-weight: 500;
         }
 
-        .bags-remaining.warning {
-            color: #e74c3c;
-        }
-
         .bags-remaining.complete {
             color: #27ae60;
         }
@@ -181,10 +177,6 @@
             background: linear-gradient(90deg, #5a8a2a, #8fbc5a);
             border-radius: 4px;
             transition: width 0.3s ease, background 0.3s ease;
-        }
-
-        .progress-fill.warning {
-            background: linear-gradient(90deg, #e74c3c, #c0392b);
         }
 
         .progress-fill.complete {
@@ -297,11 +289,6 @@
             outline: none;
             border-color: #5a8a2a;
             box-shadow: 0 0 0 3px rgba(90, 138, 42, 0.1);
-        }
-
-        input[type="number"].error {
-            border-color: #e74c3c;
-            box-shadow: 0 0 0 3px rgba(231, 76, 60, 0.1);
         }
 
         input[type="number"]::-webkit-inner-spin-button,
@@ -482,22 +469,6 @@
             font-weight: 600;
         }
 
-        .error-message {
-            background: #fdeaea;
-            color: #c0392b;
-            padding: 10px 14px;
-            border-radius: 8px;
-            font-size: 0.85rem;
-            margin-bottom: 16px;
-            display: none;
-            text-align: center;
-            font-weight: 500;
-        }
-
-        .error-message.show {
-            display: block;
-        }
-
         /* Install prompt banner */
         .install-banner {
             display: none;
@@ -537,6 +508,24 @@
             border-radius: 8px;
             font-weight: 600;
             cursor: pointer;
+        }
+
+        /* Limit message */
+        .limit-message {
+            background: #fff3cd;
+            color: #856404;
+            padding: 10px 14px;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            margin-bottom: 16px;
+            display: none;
+            text-align: center;
+            font-weight: 500;
+            border: 1px solid #ffc107;
+        }
+
+        .limit-message.show {
+            display: block;
         }
 
         @media (max-width: 480px) {
@@ -603,8 +592,8 @@
             </div>
         </div>
 
-        <div class="error-message" id="errorMessage">
-            ⚠️ Total bags exceed 310! Please reduce quantities.
+        <div class="limit-message" id="limitMessage">
+            ⚠️ Maximum 310 bags allowed! Cannot add more bags.
         </div>
 
         <!-- 100 Barthi -->
@@ -623,7 +612,7 @@
                 <div class="input-group">
                     <label>Quantity</label>
                     <div class="input-wrapper bags">
-                        <input type="number" id="qty100" placeholder="0" min="0" oninput="calculate()">
+                        <input type="number" id="qty100" placeholder="0" min="0" oninput="enforceLimit(this, 'qty100')">
                     </div>
                 </div>
             </div>
@@ -659,7 +648,7 @@
                 <div class="input-group">
                     <label>Quantity</label>
                     <div class="input-wrapper bags">
-                        <input type="number" id="qty120" placeholder="0" min="0" oninput="calculate()">
+                        <input type="number" id="qty120" placeholder="0" min="0" oninput="enforceLimit(this, 'qty120')">
                     </div>
                 </div>
             </div>
@@ -695,7 +684,7 @@
                 <div class="input-group">
                     <label>Quantity</label>
                     <div class="input-wrapper bags">
-                        <input type="number" id="qty150" placeholder="0" min="0" oninput="calculate()">
+                        <input type="number" id="qty150" placeholder="0" min="0" oninput="enforceLimit(this, 'qty150')">
                     </div>
                 </div>
             </div>
@@ -796,6 +785,36 @@
             });
         }
 
+        // Enforce 310 bag limit
+        function enforceLimit(inputElement, inputId) {
+            const qty100 = inputId === 'qty100' ? (parseInt(inputElement.value) || 0) : (parseInt(document.getElementById('qty100').value) || 0);
+            const qty120 = inputId === 'qty120' ? (parseInt(inputElement.value) || 0) : (parseInt(document.getElementById('qty120').value) || 0);
+            const qty150 = inputId === 'qty150' ? (parseInt(inputElement.value) || 0) : (parseInt(document.getElementById('qty150').value) || 0);
+
+            const totalBags = qty100 + qty120 + qty150;
+
+            // If exceeds limit, reduce the current input to fit within limit
+            if (totalBags > MAX_BAGS) {
+                const otherBags = totalBags - (parseInt(inputElement.value) || 0);
+                const maxAllowed = MAX_BAGS - otherBags;
+                inputElement.value = Math.max(0, maxAllowed);
+                
+                // Show limit message briefly
+                const limitMessage = document.getElementById('limitMessage');
+                limitMessage.classList.add('show');
+                setTimeout(() => {
+                    limitMessage.classList.remove('show');
+                }, 2000);
+            }
+
+            // Prevent negative values
+            if (parseInt(inputElement.value) < 0) {
+                inputElement.value = 0;
+            }
+
+            calculate();
+        }
+
         function calculate() {
             // Get selling price
             const sellingPrice = parseFloat(document.getElementById('sellingPrice').value) || 0;
@@ -812,33 +831,23 @@
             // Calculate total bags
             const totalBags = qty100 + qty120 + qty150;
             const remaining = MAX_BAGS - totalBags;
-            const isOverLimit = totalBags > MAX_BAGS;
 
             // Update bags counter
             document.getElementById('totalBags').textContent = totalBags;
             
             const remainingEl = document.getElementById('bagsRemaining');
             const progressFill = document.getElementById('progressFill');
-            const errorMessage = document.getElementById('errorMessage');
 
-            if (isOverLimit) {
-                remainingEl.textContent = `(${Math.abs(remaining)} over limit!)`;
-                remainingEl.className = 'bags-remaining warning';
-                progressFill.style.width = '100%';
-                progressFill.className = 'progress-fill warning';
-                errorMessage.classList.add('show');
-            } else if (totalBags === MAX_BAGS) {
+            if (totalBags === MAX_BAGS) {
                 remainingEl.textContent = '(Complete!)';
                 remainingEl.className = 'bags-remaining complete';
                 progressFill.style.width = '100%';
                 progressFill.className = 'progress-fill complete';
-                errorMessage.classList.remove('show');
             } else {
                 remainingEl.textContent = `(${remaining} remaining)`;
                 remainingEl.className = 'bags-remaining';
                 progressFill.style.width = `${(totalBags / MAX_BAGS) * 100}%`;
                 progressFill.className = 'progress-fill';
-                errorMessage.classList.remove('show');
             }
 
             // Calculate cost per bag (buying price × coconuts per bag)
@@ -908,21 +917,6 @@
                 totalProfitEl.textContent = '₹ ' + totalProfitPerLoad.toLocaleString('en-IN');
                 totalProfitEl.className = 'value gain';
             }
-
-            // Add error class to quantity inputs if over limit
-            const qtyInputs = [
-                document.getElementById('qty100'),
-                document.getElementById('qty120'),
-                document.getElementById('qty150')
-            ];
-            
-            qtyInputs.forEach(input => {
-                if (isOverLimit) {
-                    input.classList.add('error');
-                } else {
-                    input.classList.remove('error');
-                }
-            });
         }
 
         function updateProfitDisplay(valueId, boxId, profit) {
