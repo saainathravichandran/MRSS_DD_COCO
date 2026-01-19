@@ -1,0 +1,955 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#2d5016">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="MRSS_DD COCO">
+    <meta name="description" content="Coconut Price Calculator - Calculate buying and selling prices with profit per load">
+    
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="manifest.json">
+    
+    <!-- Icons for iOS -->
+    <link rel="apple-touch-icon" href="icon-192.png">
+    
+    <title>MRSS_DD COCO</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #2d5016 0%, #5a8a2a 50%, #8fbc5a 100%);
+            min-height: 100vh;
+            padding: 20px;
+            padding-top: env(safe-area-inset-top, 20px);
+            padding-bottom: env(safe-area-inset-bottom, 20px);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .container {
+            background: white;
+            border-radius: 24px;
+            padding: 32px;
+            max-width: 520px;
+            width: 100%;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 28px;
+        }
+
+        .logo {
+            font-size: 3rem;
+            margin-bottom: 8px;
+        }
+
+        .header h1 {
+            color: #2d5016;
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin-bottom: 4px;
+            letter-spacing: 1px;
+        }
+
+        .header p {
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        .decorative-icons {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            margin-top: 8px;
+            font-size: 1.2rem;
+        }
+
+        .selling-price-section {
+            background: linear-gradient(135deg, #1a3009, #2d5016);
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 24px;
+            color: white;
+        }
+
+        .selling-price-section label {
+            font-size: 0.9rem;
+            opacity: 0.9;
+            display: block;
+            margin-bottom: 10px;
+        }
+
+        .selling-input-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .rupee-label {
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: white;
+            opacity: 0.9;
+        }
+
+        .selling-input-wrapper input {
+            flex: 1;
+            padding: 16px 20px;
+            border: none;
+            border-radius: 12px;
+            font-size: 1.4rem;
+            font-weight: 700;
+            background: white;
+            color: #2d5016;
+        }
+
+        .selling-input-wrapper input:focus {
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.3);
+        }
+
+        .order-info {
+            background: #f0f7e6;
+            border-radius: 12px;
+            padding: 14px 18px;
+            margin-bottom: 24px;
+        }
+
+        .order-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .order-row:first-child {
+            margin-bottom: 10px;
+            padding-bottom: 10px;
+            border-bottom: 1px dashed #c5d9b0;
+        }
+
+        .order-info span {
+            color: #2d5016;
+            font-weight: 600;
+        }
+
+        .bags-status {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .bags-used {
+            font-size: 1.1rem;
+        }
+
+        .bags-remaining {
+            font-size: 0.85rem;
+            color: #666;
+            font-weight: 500;
+        }
+
+        .bags-remaining.warning {
+            color: #e74c3c;
+        }
+
+        .bags-remaining.complete {
+            color: #27ae60;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #e0e0e0;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-top: 10px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #5a8a2a, #8fbc5a);
+            border-radius: 4px;
+            transition: width 0.3s ease, background 0.3s ease;
+        }
+
+        .progress-fill.warning {
+            background: linear-gradient(90deg, #e74c3c, #c0392b);
+        }
+
+        .progress-fill.complete {
+            background: linear-gradient(90deg, #27ae60, #2ecc71);
+        }
+
+        .quality-card {
+            background: #fafafa;
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 16px;
+            border: 2px solid transparent;
+            transition: all 0.3s ease;
+        }
+
+        .quality-card:hover {
+            border-color: #5a8a2a;
+        }
+
+        .quality-card.q100 { border-left: 5px solid #e74c3c; }
+        .quality-card.q120 { border-left: 5px solid #f39c12; }
+        .quality-card.q150 { border-left: 5px solid #27ae60; }
+
+        .quality-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 14px;
+        }
+
+        .quality-title {
+            font-weight: 700;
+            color: #333;
+            font-size: 1.1rem;
+        }
+
+        .quality-badge {
+            font-size: 0.75rem;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-weight: 600;
+        }
+
+        .q100 .quality-badge { background: #fdeaea; color: #e74c3c; }
+        .q120 .quality-badge { background: #fef5e7; color: #f39c12; }
+        .q150 .quality-badge { background: #e8f6ef; color: #27ae60; }
+
+        .inputs-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 14px;
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .input-group label {
+            font-size: 0.8rem;
+            color: #666;
+            font-weight: 500;
+        }
+
+        .input-wrapper {
+            position: relative;
+        }
+
+        .input-wrapper.currency::before {
+            content: '₹';
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #888;
+            font-weight: 600;
+        }
+
+        .input-wrapper.bags::after {
+            content: 'bags';
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #888;
+            font-size: 0.85rem;
+        }
+
+        input[type="number"] {
+            width: 100%;
+            padding: 12px 14px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 1rem;
+            transition: all 0.2s ease;
+            background: white;
+        }
+
+        .input-wrapper.currency input {
+            padding-left: 28px;
+        }
+
+        .input-wrapper.bags input {
+            padding-right: 45px;
+        }
+
+        input[type="number"]:focus {
+            outline: none;
+            border-color: #5a8a2a;
+            box-shadow: 0 0 0 3px rgba(90, 138, 42, 0.1);
+        }
+
+        input[type="number"].error {
+            border-color: #e74c3c;
+            box-shadow: 0 0 0 3px rgba(231, 76, 60, 0.1);
+        }
+
+        input[type="number"]::-webkit-inner-spin-button,
+        input[type="number"]::-webkit-outer-spin-button {
+            opacity: 1;
+        }
+
+        .results-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+        }
+
+        .result-box {
+            padding: 10px 8px;
+            background: #f0f0f0;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .result-box.cost {
+            background: linear-gradient(135deg, #2d5016, #5a8a2a);
+            color: white;
+        }
+
+        .result-box.profit {
+            background: linear-gradient(135deg, #1a3009, #2d5016);
+            color: white;
+        }
+
+        .result-box.profit.loss {
+            background: linear-gradient(135deg, #c0392b, #e74c3c);
+        }
+
+        .result-label {
+            font-size: 0.7rem;
+            opacity: 0.85;
+            margin-bottom: 2px;
+        }
+
+        .result-value {
+            font-size: 1rem;
+            font-weight: 700;
+        }
+
+        .summary {
+            margin-top: 24px;
+            padding: 20px;
+            background: linear-gradient(135deg, #1a3009, #2d5016);
+            border-radius: 16px;
+            color: white;
+        }
+
+        .summary h3 {
+            font-size: 1rem;
+            margin-bottom: 16px;
+            opacity: 0.9;
+            text-align: center;
+        }
+
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            text-align: center;
+            margin-bottom: 16px;
+        }
+
+        .summary-item {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 12px 8px;
+            border-radius: 10px;
+        }
+
+        .summary-item .label {
+            font-size: 0.7rem;
+            opacity: 0.8;
+            margin-bottom: 4px;
+        }
+
+        .summary-item .value {
+            font-size: 0.95rem;
+            font-weight: 700;
+        }
+
+        .summary-item .qty {
+            font-size: 0.75rem;
+            opacity: 0.7;
+            margin-top: 2px;
+        }
+
+        .summary-item .profit-info {
+            font-size: 0.7rem;
+            margin-top: 4px;
+            padding-top: 4px;
+            border-top: 1px solid rgba(255,255,255,0.2);
+        }
+
+        .summary-item .profit-info.loss {
+            color: #ff6b6b;
+        }
+
+        .summary-item .profit-info.gain {
+            color: #69db7c;
+        }
+
+        .total-section {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .total-coconuts {
+            background: rgba(255, 255, 255, 0.15);
+            padding: 16px;
+            border-radius: 12px;
+            text-align: center;
+        }
+
+        .total-coconuts .label {
+            font-size: 0.85rem;
+            opacity: 0.9;
+            margin-bottom: 4px;
+        }
+
+        .total-coconuts .value {
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+
+        .total-coconuts .bags-info {
+            font-size: 0.8rem;
+            opacity: 0.7;
+            margin-top: 4px;
+        }
+
+        .total-profit {
+            background: rgba(255, 255, 255, 0.25);
+            padding: 16px;
+            border-radius: 12px;
+            text-align: center;
+        }
+
+        .total-profit .label {
+            font-size: 0.85rem;
+            opacity: 0.9;
+            margin-bottom: 4px;
+        }
+
+        .total-profit .value {
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+
+        .total-profit .value.loss {
+            color: #ff6b6b;
+        }
+
+        .total-profit .value.gain {
+            color: #69db7c;
+        }
+
+        .total-profit .per-load {
+            font-size: 0.75rem;
+            opacity: 0.8;
+            margin-top: 4px;
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 20px;
+            color: #999;
+            font-size: 0.8rem;
+        }
+
+        .footer .brand {
+            color: #2d5016;
+            font-weight: 600;
+        }
+
+        .error-message {
+            background: #fdeaea;
+            color: #c0392b;
+            padding: 10px 14px;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            margin-bottom: 16px;
+            display: none;
+            text-align: center;
+            font-weight: 500;
+        }
+
+        .error-message.show {
+            display: block;
+        }
+
+        /* Install prompt banner */
+        .install-banner {
+            display: none;
+            background: linear-gradient(135deg, #f39c12, #e67e22);
+            color: white;
+            padding: 12px 16px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .install-banner.show {
+            display: block;
+        }
+
+        .install-banner p {
+            margin-bottom: 10px;
+            font-size: 0.9rem;
+        }
+
+        .install-btn {
+            background: white;
+            color: #e67e22;
+            border: none;
+            padding: 10px 24px;
+            border-radius: 8px;
+            font-weight: 700;
+            cursor: pointer;
+            margin-right: 8px;
+        }
+
+        .install-dismiss {
+            background: transparent;
+            color: white;
+            border: 2px solid white;
+            padding: 10px 16px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                padding: 20px;
+            }
+            
+            .inputs-row {
+                grid-template-columns: 1fr;
+            }
+
+            .results-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .summary-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .total-section {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Install Banner -->
+        <div class="install-banner" id="installBanner">
+            <p>📲 Install MRSS_DD COCO for quick access!</p>
+            <button class="install-btn" id="installBtn">Install App</button>
+            <button class="install-dismiss" id="dismissBtn">Later</button>
+        </div>
+
+        <div class="header">
+            <div class="logo">🌴🥥🌴</div>
+            <h1>MRSS_DD COCO</h1>
+            <p>Coconut Price Calculator</p>
+            <div class="decorative-icons">🥥 🌴 🥥 🌴 🥥</div>
+        </div>
+
+        <div class="selling-price-section">
+            <label>Selling Price per Bag (same for all qualities)</label>
+            <div class="selling-input-wrapper">
+                <span class="rupee-label">₹</span>
+                <input type="number" id="sellingPrice" placeholder="Enter selling price" oninput="calculate()">
+            </div>
+        </div>
+
+        <div class="order-info">
+            <div class="order-row">
+                <span>🌴 Maximum Bags per Load</span>
+                <span>310 Bags</span>
+            </div>
+            <div class="order-row">
+                <span>🥥 Bags Allocated</span>
+                <div class="bags-status">
+                    <span class="bags-used" id="totalBags">0</span>
+                    <span class="bags-remaining" id="bagsRemaining">(310 remaining)</span>
+                </div>
+            </div>
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressFill" style="width: 0%"></div>
+            </div>
+        </div>
+
+        <div class="error-message" id="errorMessage">
+            ⚠️ Total bags exceed 310! Please reduce quantities.
+        </div>
+
+        <!-- 100 Barthi -->
+        <div class="quality-card q100">
+            <div class="quality-header">
+                <span class="quality-title">🥥 100 Barthi</span>
+                <span class="quality-badge">100 nos/bag</span>
+            </div>
+            <div class="inputs-row">
+                <div class="input-group">
+                    <label>Buying Price (per piece)</label>
+                    <div class="input-wrapper currency">
+                        <input type="number" id="price100" placeholder="0.00" step="0.01" oninput="calculate()">
+                    </div>
+                </div>
+                <div class="input-group">
+                    <label>Quantity</label>
+                    <div class="input-wrapper bags">
+                        <input type="number" id="qty100" placeholder="0" min="0" oninput="calculate()">
+                    </div>
+                </div>
+            </div>
+            <div class="results-grid">
+                <div class="result-box">
+                    <div class="result-label">Cost per Bag</div>
+                    <div class="result-value" id="cost100">₹ 0</div>
+                </div>
+                <div class="result-box cost">
+                    <div class="result-label">With Expenses</div>
+                    <div class="result-value" id="costExp100">₹ 0</div>
+                </div>
+                <div class="result-box profit" id="profitBox100">
+                    <div class="result-label">Profit per Bag</div>
+                    <div class="result-value" id="profit100">₹ 0</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 120 Barthi -->
+        <div class="quality-card q120">
+            <div class="quality-header">
+                <span class="quality-title">🥥 120 Barthi</span>
+                <span class="quality-badge">120 nos/bag</span>
+            </div>
+            <div class="inputs-row">
+                <div class="input-group">
+                    <label>Buying Price (per piece)</label>
+                    <div class="input-wrapper currency">
+                        <input type="number" id="price120" placeholder="0.00" step="0.01" oninput="calculate()">
+                    </div>
+                </div>
+                <div class="input-group">
+                    <label>Quantity</label>
+                    <div class="input-wrapper bags">
+                        <input type="number" id="qty120" placeholder="0" min="0" oninput="calculate()">
+                    </div>
+                </div>
+            </div>
+            <div class="results-grid">
+                <div class="result-box">
+                    <div class="result-label">Cost per Bag</div>
+                    <div class="result-value" id="cost120">₹ 0</div>
+                </div>
+                <div class="result-box cost">
+                    <div class="result-label">With Expenses</div>
+                    <div class="result-value" id="costExp120">₹ 0</div>
+                </div>
+                <div class="result-box profit" id="profitBox120">
+                    <div class="result-label">Profit per Bag</div>
+                    <div class="result-value" id="profit120">₹ 0</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 150 Barthi -->
+        <div class="quality-card q150">
+            <div class="quality-header">
+                <span class="quality-title">🥥 150 Barthi</span>
+                <span class="quality-badge">150 nos/bag</span>
+            </div>
+            <div class="inputs-row">
+                <div class="input-group">
+                    <label>Buying Price (per piece)</label>
+                    <div class="input-wrapper currency">
+                        <input type="number" id="price150" placeholder="0.00" step="0.01" oninput="calculate()">
+                    </div>
+                </div>
+                <div class="input-group">
+                    <label>Quantity</label>
+                    <div class="input-wrapper bags">
+                        <input type="number" id="qty150" placeholder="0" min="0" oninput="calculate()">
+                    </div>
+                </div>
+            </div>
+            <div class="results-grid">
+                <div class="result-box">
+                    <div class="result-label">Cost per Bag</div>
+                    <div class="result-value" id="cost150">₹ 0</div>
+                </div>
+                <div class="result-box cost">
+                    <div class="result-label">With Expenses</div>
+                    <div class="result-value" id="costExp150">₹ 0</div>
+                </div>
+                <div class="result-box profit" id="profitBox150">
+                    <div class="result-label">Profit per Bag</div>
+                    <div class="result-value" id="profit150">₹ 0</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="summary">
+            <h3>🌴 Load Summary 🌴</h3>
+            <div class="summary-grid">
+                <div class="summary-item">
+                    <div class="label">100 Barthi</div>
+                    <div class="value" id="sum100">₹ 0</div>
+                    <div class="qty" id="sumQty100">0 bags</div>
+                    <div class="profit-info" id="sumProfit100">Profit: ₹ 0</div>
+                </div>
+                <div class="summary-item">
+                    <div class="label">120 Barthi</div>
+                    <div class="value" id="sum120">₹ 0</div>
+                    <div class="qty" id="sumQty120">0 bags</div>
+                    <div class="profit-info" id="sumProfit120">Profit: ₹ 0</div>
+                </div>
+                <div class="summary-item">
+                    <div class="label">150 Barthi</div>
+                    <div class="value" id="sum150">₹ 0</div>
+                    <div class="qty" id="sumQty150">0 bags</div>
+                    <div class="profit-info" id="sumProfit150">Profit: ₹ 0</div>
+                </div>
+            </div>
+            <div class="total-section">
+                <div class="total-coconuts">
+                    <div class="label">🥥 Total Coconuts</div>
+                    <div class="value" id="totalCoconuts">0</div>
+                    <div class="bags-info" id="bagsInfo">in 0 bags</div>
+                </div>
+                <div class="total-profit">
+                    <div class="label">💰 Total Profit per Load</div>
+                    <div class="value" id="totalProfitValue">₹ 0</div>
+                    <div class="per-load">100 + 120 + 150 Barthi</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer">
+            <span class="brand">🌴 MRSS_DD COCO 🌴</span><br>
+            Expenses: ₹200 per bag included
+        </div>
+    </div>
+
+    <script>
+        const MAX_BAGS = 310;
+        const EXPENSE_PER_BAG = 200;
+
+        // PWA Install functionality
+        let deferredPrompt;
+
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            document.getElementById('installBanner').classList.add('show');
+        });
+
+        document.getElementById('installBtn').addEventListener('click', async () => {
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                const { outcome } = await deferredPrompt.userChoice;
+                deferredPrompt = null;
+                document.getElementById('installBanner').classList.remove('show');
+            }
+        });
+
+        document.getElementById('dismissBtn').addEventListener('click', () => {
+            document.getElementById('installBanner').classList.remove('show');
+        });
+
+        // Register Service Worker
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('sw.js')
+                    .then(registration => {
+                        console.log('SW registered:', registration);
+                    })
+                    .catch(error => {
+                        console.log('SW registration failed:', error);
+                    });
+            });
+        }
+
+        function calculate() {
+            // Get selling price
+            const sellingPrice = parseFloat(document.getElementById('sellingPrice').value) || 0;
+
+            // Get input values
+            const price100 = parseFloat(document.getElementById('price100').value) || 0;
+            const price120 = parseFloat(document.getElementById('price120').value) || 0;
+            const price150 = parseFloat(document.getElementById('price150').value) || 0;
+
+            const qty100 = parseInt(document.getElementById('qty100').value) || 0;
+            const qty120 = parseInt(document.getElementById('qty120').value) || 0;
+            const qty150 = parseInt(document.getElementById('qty150').value) || 0;
+
+            // Calculate total bags
+            const totalBags = qty100 + qty120 + qty150;
+            const remaining = MAX_BAGS - totalBags;
+            const isOverLimit = totalBags > MAX_BAGS;
+
+            // Update bags counter
+            document.getElementById('totalBags').textContent = totalBags;
+            
+            const remainingEl = document.getElementById('bagsRemaining');
+            const progressFill = document.getElementById('progressFill');
+            const errorMessage = document.getElementById('errorMessage');
+
+            if (isOverLimit) {
+                remainingEl.textContent = `(${Math.abs(remaining)} over limit!)`;
+                remainingEl.className = 'bags-remaining warning';
+                progressFill.style.width = '100%';
+                progressFill.className = 'progress-fill warning';
+                errorMessage.classList.add('show');
+            } else if (totalBags === MAX_BAGS) {
+                remainingEl.textContent = '(Complete!)';
+                remainingEl.className = 'bags-remaining complete';
+                progressFill.style.width = '100%';
+                progressFill.className = 'progress-fill complete';
+                errorMessage.classList.remove('show');
+            } else {
+                remainingEl.textContent = `(${remaining} remaining)`;
+                remainingEl.className = 'bags-remaining';
+                progressFill.style.width = `${(totalBags / MAX_BAGS) * 100}%`;
+                progressFill.className = 'progress-fill';
+                errorMessage.classList.remove('show');
+            }
+
+            // Calculate cost per bag (buying price × coconuts per bag)
+            const cost100 = price100 * 100;
+            const cost120 = price120 * 120;
+            const cost150 = price150 * 150;
+
+            // Calculate cost with expenses
+            const costExp100 = cost100 + EXPENSE_PER_BAG;
+            const costExp120 = cost120 + EXPENSE_PER_BAG;
+            const costExp150 = cost150 + EXPENSE_PER_BAG;
+
+            // Calculate profit per bag (selling price - cost with expenses)
+            const profit100 = sellingPrice - costExp100;
+            const profit120 = sellingPrice - costExp120;
+            const profit150 = sellingPrice - costExp150;
+
+            // Calculate total profit for each type
+            const totalProfit100 = profit100 * qty100;
+            const totalProfit120 = profit120 * qty120;
+            const totalProfit150 = profit150 * qty150;
+
+            // Total profit per load
+            const totalProfitPerLoad = totalProfit100 + totalProfit120 + totalProfit150;
+
+            // Total coconuts
+            const totalCoconuts = (qty100 * 100) + (qty120 * 120) + (qty150 * 150);
+
+            // Update cost displays
+            document.getElementById('cost100').textContent = '₹ ' + cost100.toLocaleString('en-IN');
+            document.getElementById('cost120').textContent = '₹ ' + cost120.toLocaleString('en-IN');
+            document.getElementById('cost150').textContent = '₹ ' + cost150.toLocaleString('en-IN');
+
+            document.getElementById('costExp100').textContent = '₹ ' + costExp100.toLocaleString('en-IN');
+            document.getElementById('costExp120').textContent = '₹ ' + costExp120.toLocaleString('en-IN');
+            document.getElementById('costExp150').textContent = '₹ ' + costExp150.toLocaleString('en-IN');
+
+            // Update profit displays and styling
+            updateProfitDisplay('profit100', 'profitBox100', profit100);
+            updateProfitDisplay('profit120', 'profitBox120', profit120);
+            updateProfitDisplay('profit150', 'profitBox150', profit150);
+
+            // Update summary
+            document.getElementById('sum100').textContent = '₹ ' + costExp100.toLocaleString('en-IN');
+            document.getElementById('sum120').textContent = '₹ ' + costExp120.toLocaleString('en-IN');
+            document.getElementById('sum150').textContent = '₹ ' + costExp150.toLocaleString('en-IN');
+
+            document.getElementById('sumQty100').textContent = qty100 + ' bags';
+            document.getElementById('sumQty120').textContent = qty120 + ' bags';
+            document.getElementById('sumQty150').textContent = qty150 + ' bags';
+
+            // Update profit info in summary
+            updateSummaryProfit('sumProfit100', profit100, qty100);
+            updateSummaryProfit('sumProfit120', profit120, qty120);
+            updateSummaryProfit('sumProfit150', profit150, qty150);
+
+            // Update total coconuts
+            document.getElementById('totalCoconuts').textContent = totalCoconuts.toLocaleString('en-IN');
+            document.getElementById('bagsInfo').textContent = 'in ' + totalBags + ' bags';
+
+            // Update total profit per load
+            const totalProfitEl = document.getElementById('totalProfitValue');
+            if (totalProfitPerLoad < 0) {
+                totalProfitEl.textContent = '-₹ ' + Math.abs(totalProfitPerLoad).toLocaleString('en-IN');
+                totalProfitEl.className = 'value loss';
+            } else {
+                totalProfitEl.textContent = '₹ ' + totalProfitPerLoad.toLocaleString('en-IN');
+                totalProfitEl.className = 'value gain';
+            }
+
+            // Add error class to quantity inputs if over limit
+            const qtyInputs = [
+                document.getElementById('qty100'),
+                document.getElementById('qty120'),
+                document.getElementById('qty150')
+            ];
+            
+            qtyInputs.forEach(input => {
+                if (isOverLimit) {
+                    input.classList.add('error');
+                } else {
+                    input.classList.remove('error');
+                }
+            });
+        }
+
+        function updateProfitDisplay(valueId, boxId, profit) {
+            const valueEl = document.getElementById(valueId);
+            const boxEl = document.getElementById(boxId);
+            
+            if (profit < 0) {
+                valueEl.textContent = '-₹ ' + Math.abs(profit).toLocaleString('en-IN');
+                boxEl.classList.add('loss');
+            } else {
+                valueEl.textContent = '₹ ' + profit.toLocaleString('en-IN');
+                boxEl.classList.remove('loss');
+            }
+        }
+
+        function updateSummaryProfit(elementId, profitPerBag, qty) {
+            const el = document.getElementById(elementId);
+            const totalProfit = profitPerBag * qty;
+            
+            if (totalProfit < 0) {
+                el.textContent = 'Loss: ₹ ' + Math.abs(totalProfit).toLocaleString('en-IN');
+                el.className = 'profit-info loss';
+            } else {
+                el.textContent = 'Profit: ₹ ' + totalProfit.toLocaleString('en-IN');
+                el.className = 'profit-info gain';
+            }
+        }
+    </script>
+</body>
+</html>
